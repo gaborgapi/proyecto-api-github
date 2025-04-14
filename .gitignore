@@ -1,0 +1,17 @@
+__pycache__/
+.idea/
+/lib
+/bin
+env/
+venv/
+.DS_Store
+.coverage
+.pytest_cache/
+htmlcov/
+coverage.xml
+pylint-report.txt
+tests/__pycache__/
+*.pyc
+Entorno_1/
+token.env
+Entorno_30/
