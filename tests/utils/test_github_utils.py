@@ -8,6 +8,7 @@ from app.utils.github_utils import (
     get_repos,
     get_commits,
     get_pull_requests,
+    get_dependabot_alerts,
     GithubAPIException
 )
 
@@ -131,6 +132,58 @@ class TestGithubUtils(unittest.TestCase):
         # Verificamos que se lanza una excepción de tipo GithubAPIException
         with self.assertRaises(GithubAPIException):
             get_pull_requests("user_test", "repo_test")
+
+    @patch("app.utils.github_utils.requests.get")
+    def test_get_dependabot_alerts_success(self, mock_get):
+        """Prueba de éxito para la función get_dependabot_alerts."""
+        # Simulamos la respuesta de la API
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = [
+            {
+                "number": 1,
+                "state": "open",
+                "dependency": {"package": {"name": "requests"}},
+                "created_at": "2024-03-01T00:00:00Z"
+            }
+        ]
+        mock_get.return_value = mock_response
+
+        result = get_dependabot_alerts(
+            repo_owner="test-org",
+            repo_name="test-repo",
+            state="open",
+            start_date="2024-01-01",
+            end_date="2024-04-01"
+        )
+
+        self.assertIsInstance(result, list)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["state"], "open")
+
+        # Validamos que los parámetros hayan sido pasados correctamente
+        called_params = mock_get.call_args[1]["params"]
+        self.assertEqual(called_params["state"], "open")
+        self.assertEqual(called_params["created"], "<=2024-04-01")
+
+    @patch("app.utils.github_utils.requests.get")
+    def test_get_dependabot_alerts_timeout(self, mock_get):
+        """Prueba para un error de Timeout en get_dependabot_alerts."""
+        mock_get.side_effect = requests.exceptions.Timeout
+
+        with self.assertRaises(GithubAPIException):
+            get_dependabot_alerts("org", "repo")
+
+    @patch("app.utils.github_utils.requests.get")
+    def test_get_dependabot_alerts_request_exception(self, mock_get):
+        """Prueba para una excepción RequestException
+        en get_dependabot_alerts."""
+        mock_get.side_effect = requests.exceptions.RequestException(
+            "Error general"
+        )
+
+        with self.assertRaises(GithubAPIException):
+            get_dependabot_alerts("org", "repo")
 
 
 if __name__ == "__main__":

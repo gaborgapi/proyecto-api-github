@@ -6,6 +6,7 @@ from main import app
 
 client = TestClient(app)
 
+
 @patch("app.repositorios.activity_service.get_pull_requests")
 @patch("app.repositorios.activity_service.get_repos")
 @patch("app.repositorios.activity_service.get_commits")
@@ -31,7 +32,8 @@ def test_get_repositorios(
         []  # repo2 no tiene commits recientes
     ]
 
-    # Simulamos las respuestas de get_pull_requests (ahora usando todos los PRs)
+    # Simulamos las respuestas de get_pull_requests
+    # (ahora usando todos los PRs)
     mock_get_prs.side_effect = [
         [  # PRs de repo1
             {"state": "open"},
@@ -45,7 +47,7 @@ def test_get_repositorios(
     ]
 
     # Realizamos la solicitud GET al endpoint de repositorios
-    response = client.get('/repositorios/usuario_prueba')
+    response = client.get('/v1/repositorios/usuario_prueba')
 
     # Verificamos que la respuesta sea exitosa
     assert response.status_code == 200
@@ -77,7 +79,7 @@ def test_get_repositorios_error(mock_get_commits, mock_get_repos):
     mock_get_repos.side_effect = Exception("Error al obtener los repositorios")
 
     # Realizamos la solicitud GET al endpoint de repositorios
-    response = client.get('/repositorios/usuario_invalido')
+    response = client.get('/v1/repositorios/usuario_invalido')
 
     # Verificamos que la respuesta sea un error
     assert response.status_code == 500

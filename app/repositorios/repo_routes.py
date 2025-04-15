@@ -8,7 +8,7 @@ from app.repositorios.activity_service import clasificar_repositorios
 router = APIRouter()
 
 
-@router.get("/repositorios/{usuario}")
+@router.get("/v1/repositorios/{usuario}")
 async def obtener_repositorios(usuario: str):
     """
     Endpoint que devuelve los repositorios activos e inactivos de un usuario.
