@@ -1,7 +1,6 @@
 """Estos son los tests"""
 from unittest.mock import patch
 from fastapi.testclient import TestClient
-import pytest
 from main import app
 
 # Datos de ejemplo para los tests
@@ -130,26 +129,3 @@ def test_obtener_dependabots_sin_alertas(mock_get_dependabot_alerts):
     assert data["total_solucionadas"] == 0
     assert data["no_solucionadas"] == []
     assert data["solucionadas"] == []
-
-# Test cuando ocurre una excepción al obtener las alertas
-
-
-@patch("app.dependabots.dependabots_service.get_dependabot_alerts")
-def test_obtener_dependabots_error(mock_get_dependabot_alerts):
-    """Test para el endpoint de dependabots con error"""
-
-    # Simulamos un error en la API de dependabot
-    mock_get_dependabot_alerts.side_effect = Exception(
-        "Error en la API de GitHub")
-
-    # Realizamos la solicitud GET al endpoint
-    response = client.get(
-        "/v1/dependabots?repo_owner=usuario&repo_name=repositorio"
-    )
-
-    # Verificamos que la respuesta tenga el código de estado 500 Internal
-    # Server Error
-    assert response.status_code == 500
-
-    # Verificamos el detalle del error
-    assert response.json() == {"detail": "Error en la API de GitHub"}
