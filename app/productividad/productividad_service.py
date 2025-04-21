@@ -39,6 +39,9 @@ async def obtener_productividad_repositorio(repo_owner: str, repo_name: str):
     # Clasificamos la productividad de cada usuario
     productividad = []  # Lista para almacenar los resultados
 
+    total_productivos = 0
+    total_improductivos = 0
+
     for usuario in usuarios:
 
         # Filtramos todos los commits de los últimos 30 días
@@ -81,8 +84,10 @@ async def obtener_productividad_repositorio(repo_owner: str, repo_name: str):
         if (len(commits_recientes) >= COMMIT_THRESHOLD and
                 len(pr_abiertos) >= PR_THRESHOLD):
             status = "productivo"
+            total_productivos += 1
         else:
             status = "improductivo"
+            total_improductivos += 1
 
         # Agregamos los datos del usuario a la lista de productividad
         productividad.append({
@@ -93,14 +98,14 @@ async def obtener_productividad_repositorio(repo_owner: str, repo_name: str):
             "pull_requests_no_fusionados": len(pr_no_fusionados_cerrados)
         })
 
-    return productividad
+    return productividad, total_productivos, total_improductivos
 
 
 async def obtener_productividad_por_repositorio(repo_owner: str, repo_name: str):
     """Obtiene la productividad de los usuarios de un repositorio
     y retorna los datos en formato JSON."""
 
-    productividad = await obtener_productividad_repositorio(repo_owner, repo_name)
+    productividad, total_productivos, total_improductivos = await obtener_productividad_repositorio(repo_owner, repo_name)
 
     #Indexación de los documentos en Elasticsearch
     for usuario_data in productividad:
@@ -110,7 +115,9 @@ async def obtener_productividad_por_repositorio(repo_owner: str, repo_name: str)
             "status": usuario_data["status"],
             "commits": usuario_data["commits"],
             "pull_requests_abiertos": usuario_data["pull_requests_abiertos"],
-            "pull_requests_no_fusionados": usuario_data["pull_requests_no_fusionados"]
+            "pull_requests_no_fusionados": usuario_data["pull_requests_no_fusionados"],
+            "usuarios_productivos": total_productivos,
+            "usuarios_improductivos": total_improductivos,
         }
 
         # Indexar el documento en Elasticsearch
@@ -125,5 +132,7 @@ async def obtener_productividad_por_repositorio(repo_owner: str, repo_name: str)
     # Devolvemos la estructura organizada para el frontend
     return {
         "repo": repo_name,
-        "usuarios_productivos_improductivos": productividad
+        "usuarios_productivos_improductivos": productividad,
+        "usuarios_productivos": total_productivos,
+        "usuarios_improductivos": total_improductivos
     }
