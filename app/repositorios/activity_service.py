@@ -79,7 +79,7 @@ async def clasificar_repositorios(usuario: str):
                         "estado_repo"
                     ] = "Repo Ineficiente"
             else:
-                repo_data["pull_requests"]["estado_repo"] = "Repo Sin PRs"
+                repo_data["pull_requests"]["estado_repo"] = "Repo Ineficiente"
 
         except GithubAPIException:
             repo_data["status"] = "inactivo"

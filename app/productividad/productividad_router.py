@@ -12,6 +12,8 @@ class ProductividadResponse(BaseModel):
     """Modelo de respuesta que usaremos para el endpoint"""
     repo: str
     usuarios_productivos_improductivos: list
+    usuarios_productivos: int
+    usuarios_improductivos: int
 
 
 @router.get(
