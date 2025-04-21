@@ -4,14 +4,14 @@ from datetime import datetime, timedelta
 import requests
 from config import Config  # Importamos la clase Config de config.py
 
-TIMEOUT = 10
+TIMEOUT = 20
 
 
 class GithubAPIException(Exception):
     """Excepción personalizada para errores de la API de GitHub."""
 
 
-def get_repos(usuario: str):
+async def get_repos(usuario: str):
     """Obtiene los repositorios de un usuario u organización de GitHub."""
     url = f"{Config.GITHUB_API_URL}/users/{usuario}/repos"
     headers = {"Authorization": f"Bearer {Config.GITHUB_TOKEN}"}
@@ -28,7 +28,7 @@ def get_repos(usuario: str):
         raise GithubAPIException(f"Error en la solicitud a {url}: {e}") from e
 
 
-def get_commits(repo_owner: str, repo_name: str):
+async def get_commits(repo_owner: str, repo_name: str):
     """Obtiene los commits recientes de un repositorio."""
     url = f"{Config.GITHUB_API_URL}/repos/{repo_owner}/{repo_name}/commits"
     headers = {"Authorization": f"Bearer {Config.GITHUB_TOKEN}"}
@@ -51,7 +51,7 @@ def get_commits(repo_owner: str, repo_name: str):
         raise GithubAPIException(f"Error en la solicitud a {url}: {e}") from e
 
 
-def get_pull_requests(repo_owner: str, repo_name: str):
+async def get_pull_requests(repo_owner: str, repo_name: str):
     """Obtiene los pull requests de un repositorio de GitHub."""
     url = f"{Config.GITHUB_API_URL}/repos/{repo_owner}/{repo_name}/pulls?state=all"
     headers = {"Authorization": f"Bearer {Config.GITHUB_TOKEN}"}
@@ -68,7 +68,7 @@ def get_pull_requests(repo_owner: str, repo_name: str):
         raise GithubAPIException(f"Error en la solicitud a {url}: {e}") from e
 
 
-def get_dependabot_alerts(
+async def get_dependabot_alerts(
         repo_owner: str,
         repo_name: str,
         state="open",

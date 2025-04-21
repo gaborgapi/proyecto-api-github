@@ -10,7 +10,7 @@ router = APIRouter()
 
 class ProductividadResponse(BaseModel):
     """Modelo de respuesta que usaremos para el endpoint"""
-    repositorio: str
+    repo: str
     usuarios_productivos_improductivos: list
 
 
@@ -29,7 +29,7 @@ async def obtener_productividad(repo_owner: str, repo_name: str):
         )
 
         # Devolvemos la respuesta
-        return resultado
+        return await resultado
 
     except Exception as e:
         # En caso de error, retornamos un mensaje de error
