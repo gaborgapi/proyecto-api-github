@@ -157,7 +157,7 @@ class TestProductividadRepositorio(unittest.TestCase):
 
         # Verificamos que el resultado contenga los datos esperados para cada
         # usuario
-        self.assertEqual(resultado['repositorio'], "repo_test")
+        self.assertEqual(resultado['repo'], "repo_test")
         self.assertEqual(
             len(resultado['usuarios_productivos_improductivos']), 3)
 

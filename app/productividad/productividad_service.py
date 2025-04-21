@@ -1,19 +1,23 @@
 """Este es el servicio del modulo productividad"""
 from datetime import datetime, timedelta
+import sys
+
+sys.path.append('.')
 from app.utils.github_utils import get_commits, get_pull_requests
+from app.elasticsearch.conexion_elasticsearch import indexar_documento_elasticsearch
 
 # Definimos los umbrales para clasificar la productividad
 COMMIT_THRESHOLD = 1  # Al menos 1 commit en las últimas dos semanas
 PR_THRESHOLD = 1  # Al menos 1 PR abierto en las últimas dos semanas
 
 
-def obtener_productividad_repositorio(repo_owner: str, repo_name: str):
+async def obtener_productividad_repositorio(repo_owner: str, repo_name: str):
     """Obtiene y clasifica la productividad de
     los usuarios de un repositorio específico."""
 
     # Obtener los commits y pull requests de este repositorio
-    commits = get_commits(repo_owner, repo_name)
-    prs = get_pull_requests(repo_owner, repo_name)
+    commits = await get_commits(repo_owner, repo_name)
+    prs = await get_pull_requests(repo_owner, repo_name)
 
     # Definimos el rango de fechas para las últimas dos semanas
     fecha_limite_2_semanas = datetime.now() - timedelta(weeks=2)
@@ -92,14 +96,34 @@ def obtener_productividad_repositorio(repo_owner: str, repo_name: str):
     return productividad
 
 
-def obtener_productividad_por_repositorio(repo_owner: str, repo_name: str):
+async def obtener_productividad_por_repositorio(repo_owner: str, repo_name: str):
     """Obtiene la productividad de los usuarios de un repositorio
     y retorna los datos en formato JSON."""
 
-    productividad = obtener_productividad_repositorio(repo_owner, repo_name)
+    productividad = await obtener_productividad_repositorio(repo_owner, repo_name)
+
+    #Indexación de los documentos en Elasticsearch
+    for usuario_data in productividad:
+        documento = {
+            "repo": repo_name,
+            "usuario": usuario_data["usuario"],
+            "status": usuario_data["status"],
+            "commits": usuario_data["commits"],
+            "pull_requests_abiertos": usuario_data["pull_requests_abiertos"],
+            "pull_requests_no_fusionados": usuario_data["pull_requests_no_fusionados"]
+        }
+
+        # Indexar el documento en Elasticsearch
+        response = await indexar_documento_elasticsearch("github_productividad_usuarios", documento)
+
+        # Verificar y mostrar el resultado en consola
+        if "result" in response and response["result"] == "created":
+            print(f"Documento para el usuario {usuario_data['usuario']} indexado correctamente.")
+        else:
+            print(f"Error al indexar el documento para el usuario {usuario_data['usuario']}: {response}")
 
     # Devolvemos la estructura organizada para el frontend
     return {
-        "repositorio": repo_name,
+        "repo": repo_name,
         "usuarios_productivos_improductivos": productividad
     }

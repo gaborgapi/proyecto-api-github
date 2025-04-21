@@ -1,5 +1,8 @@
 """Servicio para clasificar repositorios en activos e inactivos."""
-
+import sys
+sys.path.append('.')
+from app.elasticsearch.conexion_elasticsearch import indexar_documento_elasticsearch
+sys.path.append('.')
 from app.utils.github_utils import (
     get_repos,
     get_commits,
@@ -8,13 +11,13 @@ from app.utils.github_utils import (
 )
 
 
-def clasificar_repositorios(usuario: str):
+async def clasificar_repositorios(usuario: str):
     """
     Clasifica los repositorios del usuario en activos e inactivos.
     Un repositorio es activo si tiene commits en los últimos 30 días.
     Además, evalúa el estado del repositorio basado en pull requests.
     """
-    repos = get_repos(usuario)
+    repos = await get_repos(usuario)
     repos_con_estado = []
 
     for repo in repos:
@@ -36,7 +39,7 @@ def clasificar_repositorios(usuario: str):
 
         try:
             # Obtenemos los commits del repositorio
-            commits = get_commits(usuario, nombre)
+            commits = await get_commits(usuario, nombre)
 
             if commits:
                 # Si tiene commits recientes, lo marcamos como activo
@@ -46,7 +49,7 @@ def clasificar_repositorios(usuario: str):
                 repo_data["status"] = "inactivo"
 
             # Obtener los pull requests del repositorio
-            prs = get_pull_requests(usuario, nombre)
+            prs = await get_pull_requests(usuario, nombre)
             abiertos = 0
             cerrados = 0
             resueltos = 0
@@ -81,8 +84,24 @@ def clasificar_repositorios(usuario: str):
         except GithubAPIException:
             repo_data["status"] = "inactivo"
 
+        #Crear documento para Elasticsearch
+        documento = {
+            "usuario": usuario,
+            "repo": nombre,
+            "url": url,
+            "estado_repo": repo_data["pull_requests"]["estado_repo"],
+            "status": repo_data["status"],
+            "pull_requests_abiertos": repo_data["pull_requests"]["abiertos"],
+            "pull_requests_cerrados": repo_data["pull_requests"]["cerrados"],
+            "pull_requests_resueltos": repo_data["pull_requests"]["resueltos"]
+        }   
+
+        # Indexar el documento en Elasticsearch
+        await indexar_documento_elasticsearch("github_repositorios", documento)
+
         # Añadimos el repositorio con su estado a la lista
         repos_con_estado.append(repo_data)
+
 
     return {
         "total": len(repos),  # Número total de repos

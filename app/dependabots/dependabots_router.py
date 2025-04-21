@@ -26,7 +26,7 @@ async def get_dependabots(
     y rango de fechas.
     """
     # Llamar a la función que obtiene los datos
-    result = obtener_dependabots_solucionados_y_no_solucionados(
+    result = await obtener_dependabots_solucionados_y_no_solucionados(
         repo_owner=repo_owner,
         repo_name=repo_name,
         start_date=start_date,

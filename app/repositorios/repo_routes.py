@@ -14,12 +14,12 @@ async def obtener_repositorios(usuario: str):
     Endpoint que devuelve los repositorios activos e inactivos de un usuario.
     """
     try:
-        resultado = clasificar_repositorios(usuario)
+        resultado = await clasificar_repositorios(usuario)
 
         # Retornamos el resultado como un JSON
         return {
             "total_repositorios": resultado["total"],
-            "repositorios": resultado["repos_con_estado"]
+            "repo": resultado["repos_con_estado"]
         }
     except Exception as e:
         raise HTTPException(
